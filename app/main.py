@@ -11,15 +11,15 @@ from app.database import ContentPost, Lead, WhatsAppMessage, get_db, init_db
 from app.models import (
     AnalyticsSummary,
     ContentPostCreate,
-    ContentPostResponse,
     LeadCreate,
-    LeadResponse,
     WhatsAppOutboundMessage,
-    WhatsAppWebhookEvent,
 )
+from app.routes import scheduler_router, whatsapp_router
 from app.scheduler import SchedulerService
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
+app.include_router(whatsapp_router)
+app.include_router(scheduler_router)
 
 
 @app.on_event("startup")
@@ -247,7 +247,7 @@ def publish_post(post_id: int, db: Session = Depends(get_db)) -> dict:
 
 
 @app.get("/api/whatsapp/webhook")
-def whatsapp_verify(request: Request, db: Session = Depends(get_db)) -> JSONResponse:
+def whatsapp_verify(request: Request) -> JSONResponse:
     params = request.query_params
     mode = params.get("hub.mode")
     token = params.get("hub.verify_token")
@@ -322,7 +322,7 @@ def send_welcome_message(phone: str, name: str, db: Session = Depends(get_db)) -
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
 
-    message = SchedulerService.build_message_for_lead(name)
+    message = SchedulerService.build_welcome_message(name)
     response = send_whatsapp_message(WhatsAppOutboundMessage(phone=phone, message=message), db)
     return response
 
