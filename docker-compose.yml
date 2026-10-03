@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  kmd-automation:
+    build: .
+    container_name: kmd-automation-hub
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=King Mave Digital Automation Hub
+      - APP_ENV=production
+      - DATABASE_URL=sqlite:///./kmd.db
+      - WHATSAPP_TOKEN=${WHATSAPP_TOKEN:-demo_token}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-demo_phone_number_id}
+      - WHATSAPP_WEBHOOK_VERIFY_TOKEN=${WHATSAPP_WEBHOOK_VERIFY_TOKEN:-demo_verify_token}
+      - SCHEDULER_ENABLED=true
+    volumes:
+      - ./kmd.db:/app/kmd.db
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
